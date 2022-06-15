@@ -1,0 +1,107 @@
+User = get_user_model()
+
+# Create your models here.
+class Menu(models.Model):
+    MENU_CATEGORIAS = (
+        ('Pizza', 'Pizza'),
+        ('Pasta', 'Pasta'),
+        ('Subs, Subs'),
+        ('Salad, Salad'),
+        ('Dinner_Platter', 'Dinner_Platter'),
+        ('Topping', 'Topping'),
+        ('Extra', 'Extra'),
+        ('Dessert', 'Dessert'),
+        ('Pastry', 'Pastry'),
+        ('Main', 'Main'),
+        ('Appetizer', 'Appetizer'),
+        ('Side', 'Side'),
+        ('Miscellaneous', 'Micellaneous')
+    )
+
+    TAMAÑO = (
+        ('Sm', 'Small'),
+        ('Md', 'Medium'),
+        ('Lg', 'Large'),
+        ('XL', 'Extra_Large')
+    )
+
+    category = models.CharField(max_length=36, null=True, blank=True, choices=MENU_CATEGORIAS, help_text='Enter the category of the item')
+
+    name = models.CharField(max_length=128, help_text='Enter the name of the item')
+
+    price = models.DecimalField(max_digits=4, null=True, blank=True, decimal_places=2, default=0.00)
+
+    sizes = models.CharField(max_length=4, null=True, blank=True, choices=TAMAÑO, help_text='Enter the size of the item')
+
+    toppings = models.CharField(max_length=10, blank=True, null=True, help_text='Enter toppings')
+
+    num_toppings = models.CharField(max_length=10, blank=True, null=True)
+
+    def __str__(self):
+        return f"Category: {self.category} - Name: {self.name} - Sizes: {self.sizes} - Price: {self.price} - numtoppings {self.num_toppings} - toppings: {self.toppings}"
+
+class Topping(models.Model):
+    nom_topping = models.CharField(max_length=36)
+
+    price = models.DecimalField(max_digits=4, null=True, blank=True, decimal_places=2, default=0.00)
+
+    def __str__(self):
+        return f"{self.nom_topping}"
+
+class Extras(models.Model):
+    name = models.CharField(max_length=64, help_text='Enter the name of the extra')
+
+    price = models.DecimalField(max_digits=4,decimal_places=2, default=0, help_text='Enter the price of the extra')
+
+    def __str__(self):
+        return f"{self.name} - {self.price}"
+
+class Profile(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    menu_items = models.ManyToManyField(Menu,blank=True)
+
+    def __str__(self):
+        return f"{self.user.username}"
+
+def guardar_perfil(sender,instance, created, *args, **kwargs):
+    if created:
+        user_profile, created = Profile.objects.get_or_create(user=instance)
+
+post_save.connect(guardar_perfil, sender=settings.AUTH_USER_MODEL)
+
+class OrderItem(models.Model):
+    menu_item = models.ForeignKey(Menu, on_delete=models.CASCADE, blank=True, null=True)
+
+    ordenado = models.BooleanField(default=False)
+    fecha = models.DateTimeField(auto_now=True)
+    fechadeorden = models.DateTimeField(null=True)
+    es_topping = models.BooleanField(default=False)
+    num_extras = models.IntegerField(blank=True, default=True)
+    extras = models.CharField(max_length=400, blank=True, null=True)
+    costo_extras = models.DecimalField(max_digits=4, decimal_places=2, default=0.00)
+    toppings = models.CharField(max_length=400,  blank=True, null=True)
+
+    def __str__(self):
+        return f"Item-menu: {self.menu_item} - Toppings: {self.toppings} - num extras: {self.num_extras} - sub extras {self.extras} status: {self.ordenado} - date ordered: {self.fecha}"
+    
+class Order(models.Model):
+    codigo = models.CharField(max_length=15, blank=True)
+    dueño = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True)
+    ordenado = models.BooleanField(default=False)
+    item_ordenados = models.ManyToManyField(OrderItem)
+    fecha_ordenado = models.DateTimeField(auto_now=True)
+
+    def num_order_item(self):
+        return self.item_ordenados.count()
+    
+    def obtener_items_ordenados(self):
+        return self.item_ordenados.all()
+    
+    def obtener_items_ordenados_toppings(self):
+        return self.item_ordenados.all()
+
+    def total_carrito(self):
+        return sum([item.menu_item.price for item in self.item_ordenados.all()] + [item.costo_extras for item in self.item_ordenados.all()])
+
+    def __str__(self):
+        return f"User: {self.dueño} -- Date ordered: {self.fecha_ordenado} -- Orden completed status: {self.ordenado} -- Total price: {self.total_carrito} -- Items ordered: {self.item_ordenados.all()}"
