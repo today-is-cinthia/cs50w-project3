@@ -1,0 +1,156 @@
+{% extends "orders/layout.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+
+{% for title, form in data.items %}
+
+<!-- This example requires Tailwind CSS v2.0+ -->
+<div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="px-4 py-5 sm:px-6">
+      <h3 class="text-lg leading-6 font-medium text-gray-900">{{title}}</h3>
+    </div>
+    <div class="border-t border-gray-200">
+        <form action="/cart" method="post" id="{{title}}">
+            {% csrf_token %}
+            <input type="hidden" value="{{title}}" name="menu_item" id="menu_item">
+            {{ form | crispy }}
+        
+            <h5 id="price_indicator">Price: $--.--</h5>
+            <input type="submit" value="Add {{title}} to Cart">
+        </form><br><br><br> 
+  </div>
+  
+
+{% endfor %}
+{% endblock %}
+
+{% block javascript %}
+<script>
+    $(document).ready(function(){
+        $('#Pizza').change(function(){
+            var menu_item = $('#Pizza #menu_item').val();
+            var style = $('#Pizza #id_style option:selected').val();
+            var size = $('#Pizza #id_style option:selected').val();
+            var is_special = $('#Pizza #id_is_special').is(':checked');
+            var last_checked = $("Pizza #id_toppings input[name='toppings']:checked").val();
+            var num_checked = $("input[name='toppings']:checked").length;
+            var limit = 3;
+
+            $('#Pizza #id_num_toppings').val(num_checked);
+
+            if(num_checked > limit){
+                alert("Maximum are 3 toppings!");
+                $("input[name='toppings']").prop('checked', false);
+                $('#Pizza #id_num_toppings').val('0');
+            }
+
+            var num_toppings = $('#Pizza #id_num_toppings').val();
+            $.ajax({
+                type: "GET",
+                url: '{% url "obtener_precio" %}',
+                data: {
+                    'menu_item': menu_item,
+                    'style': style,
+                    'size': size,
+                    'num_toppings': num_toppings,
+                    'is_special': is_special,
+                },
+                dataType: 'json',
+                success: function(data){
+                    var x = data['price'];
+                    $('#Pizza #price_indicator').html("Price: $" + x);
+                }
+            });
+        });
+        $('#Sub').change(function(){
+            var menu_item = $('#Sub #menu_item').val();
+            var ingredients = $('#Sub #id_ingredients option:selected').val();
+            var size = $('#Sub #id_size option:selected').val();
+            var extras = $("input[name='extras']:checked").length;
+
+            if (ingredients == 11 && size == 1){
+                alert("This item is only available in Large size!");
+                $('#Sub #id_size option[value=2]').attr('selected', 'selected');
+            }
+
+            $.ajax({
+                type: "GET",
+                url: '{% url "obtener_precio" %}',
+                data: {
+                    'menu_item': menu_item,
+                    'ingredients': ingredients,
+                    'size': size,
+                    'extras': extras,
+                },
+                dataType: 'json',
+                success: function(data) {
+                    var x = data['price'];
+                    $('#Sub #price_indicator').html("Price: $" + x);
+                }
+            });
+        });
+
+        $('#Pasta').change(function(){
+            var menu_item = $('#Pasta #menu_item').val();
+            var style = $('#Pasta #id_style option:selected').val();
+
+            $.ajax({
+                type: "GET",
+                url: '{% url "get_price" %}',
+                data: {
+                    'menu_item': menu_item,
+                    'style': style,
+                },
+                dataType: 'json',
+                success: function(data) {
+                    var x = data['price'];
+                    $('#Pasta #price_indicator').html("Price: $" + x);
+                }
+
+            });
+        });
+
+        $('#Salad').change(function() {
+            var menu_item = $('#Salad #menu_item').val();
+            var style = $('#Salad #id_style option:selected').val();
+
+            $.ajax({
+                type: "GET",
+                url: '{% url "get_price" %}',
+                data: {
+                    'menu_item': menu_item,
+                    'style': style,
+                },
+                dataType: 'json',
+                success: function(data) {
+                    var x = data['price'];
+                    $('#Salad #price_indicator').html("Price: $" + x);
+                }
+
+            });
+        });
+        $('#DinnerPlatter').change(function() {
+            var menu_item = $('#DinnerPlatter #menu_item').val();
+            var style = $('#DinnerPlatter #id_style option:selected').val();
+            var size = $('#DinnerPlatter #id_size option:selected').val();
+
+            $.ajax({
+                type: "GET",
+                url: '{% url "get_price" %}',
+                data: {
+                    'menu_item': menu_item,
+                    'style': style,
+                    'size': size,
+                },
+                dataType: 'json',
+                success: function(data) {
+                    var x = data['price'];
+                    $('#DinnerPlatter #price_indicator').html("Price: $" + x);
+                }
+
+            });
+        });
+    });
+</script>
+{% endblock %}

@@ -1,80 +1,165 @@
-
-from cgitb import small
-from pyexpat import model
 from django.db import models
-from django.conf import settings
-from django.contrib.auth.models import User
+from datetime import datetime
 
-class Category(models.Model):
-    name = models.CharField(max_length=64)
+class Menu(models.Model):
+    name = models.CharField(max_length=64, blank=False)
+
     def __str__(self):
         return f"{self.name}"
 
-class Regular_pizza(models.Model):
-    name = models.CharField(max_length=64)
-    small = models.DecimalField(max_digits=4, decimal_places=2)
-    large = models.DecimalField(max_digits=4, decimal_places=2)
+
+class Size(models.Model):
+    name = models.CharField(max_length=16, blank=False)
 
     def __str__(self):
-        return f"{self.name} - {self.small} - {self.large}"
+        return self.name
+
+
+class PizzaStyle(models.Model):
+    name = models.CharField(max_length=16, blank=False)
+
+    def __str__(self):
+        return self.name
+
 
 class Topping(models.Model):
     name = models.CharField(max_length=64)
 
     def __str__(self):
+        return self.name
+
+
+class Ingredient(models.Model):
+    name = models.CharField(max_length=64)
+
+    def __str__(self):
+        return self.name
+
+
+class Extra(models.Model):
+    name = models.CharField(max_length=64)
+    added_cost = models.DecimalField(max_digits=5, default=0.50, decimal_places=2)
+
+    def __str__(self):
         return f"{self.name}"
 
-class Sub(models.Model):
-    name=models.CharField(max_length=64)
-    small = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
-    large=models.DecimalField(max_digits=4, decimal_places=2)
+
+class PastaStyle(models.Model):
+    name = models.CharField(max_length=64)
+
     def __str__(self):
-        return f"{self.name} - {self.small} - {self.large}"
+        return self.name
+
+
+class SaladStyle(models.Model):
+    name = models.CharField(max_length=64)
+
+    def __str__(self):
+        return self.name
+
+
+class DinnerPlatterStyle(models.Model):
+    name = models.CharField(max_length=64)
+
+    def __str__(self):
+        return self.name
+
+
+class Pizza(models.Model):
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, related_name="pizza")
+    style = models.ForeignKey(PizzaStyle, on_delete=models.CASCADE)
+    size = models.ForeignKey(Size, on_delete=models.CASCADE)
+    is_special = models.BooleanField(default=False)
+    toppings = models.ManyToManyField(Topping, blank=True)
+    num_toppings = models.IntegerField()
+    price = models.DecimalField(max_digits=5, default=0.00, decimal_places=2)
+
+    def toppings_list(self):
+        return "\n".join([p.name for p in self.toppings.all()])
+
+    def special(self):
+        if self.is_special:
+            return "Yes"
+        else:
+            return "No"
+
+    def __str__(self):
+        return f"{self.menu}: {self.style} | {self.size} | Special?: {self.special()} | "
+
+
+class Sub(models.Model):
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, related_name="sub")
+    ingredients = models.ForeignKey(Ingredient, blank=False, on_delete=models.CASCADE)
+    size = models.ForeignKey(Size, on_delete=models.CASCADE)
+    extras = models.ManyToManyField(Extra, blank=True)
+    price = models.DecimalField(max_digits=5, default=0.00, decimal_places=2)
+
+    def extras_list(self):
+        query_set = self.extras.all()
+        if not query_set:
+            return "No extras"
+        else:
+            return "\n".join([p.name for p in query_set])
+
+    def __str__(self):
+        extras = self.extras_list()
+        return f"{self.menu}: {self.ingredients} | {self.size} | {self.price} | Extras: {extras}"
+
 
 class Pasta(models.Model):
-    name=models.CharField(max_length=64)
-    price= models.DecimalField(max_digits=4, decimal_places=2)
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, related_name="pasta")
+    style = models.ForeignKey(PastaStyle, on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=5, default=0.00, decimal_places=2)
 
     def __str__(self):
-        return f"{self.name} - {self.price}"
+        return f"{self.menu} | {self.style} | {self.price}"
+
 
 class Salad(models.Model):
-    name=models.CharField(max_length=64)
-    price= models.DecimalField(max_digits=4, decimal_places=2)
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, related_name="salad")
+    style = models.ForeignKey(SaladStyle, on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=5, default=0.00, decimal_places=2)
 
     def __str__(self):
-        return f"{self.name} - {self.price}"
+        return f"{self.menu} | {self.style} | {self.price}"
 
-class Dinner_platter(models.Model):
-    name=models.CharField(max_length=64)
-    small=models.DecimalField(max_digits=4, decimal_places=2)
-    large=models.DecimalField(max_digits=4, decimal_places=2)
 
-    def __str__(self):
-        return f"{self.name} - {self.small} - {self.large}"
-
-class User_order(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    order_number = models.IntegerField()
-    topping_allowance = models.IntegerField(default=0)
-    status= models.CharField(max_length=64, default='initiated')
+class DinnerPlatter(models.Model):
+    menu = models.ForeignKey(Menu, on_delete=models.CASCADE, related_name="dinner_platter")
+    style = models.ForeignKey(DinnerPlatterStyle, on_delete=models.CASCADE)
+    size = models.ForeignKey(Size, on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=5, default=0.00, decimal_places=2)
 
     def __str__(self):
-        return f"{self.user} - {self.order_number}- {self.status} topping_allowance: - {self.topping_allowance}"
+        return f"{self.menu} | {self.style} | {self.size} | {self.price}"
 
-class Order2(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    number = models.IntegerField()
-    category = models.CharField(max_length=64, null=True)
-    name = models.CharField(max_length=64)
-    price=models.DecimalField(max_digits=64, decimal_places=2)
+class CartItem(models.Model):
+    menu = models.CharField(max_length=16)
+    size = models.CharField(max_length=16)
+    style = models.CharField(max_length=64)
+    additional = models.CharField(max_length=255)
+    is_special = models.BooleanField(default=False)
+    price = models.DecimalField(max_digits=5, default=0.00, decimal_places=2)
+    user_id = models.IntegerField()
 
     def __str__(self):
-        return f"{self.name} - {self.price}"
+        return self.menu + " Price: $" + str(self.price)
 
-class Oder_counter(models.Model):
-    counter=models.IntegerField()
-    def __str__(self):
-        return f" Order no. {self.counter}"
-    
 
+class OrderItem(models.Model):
+    CHOICES = (
+        ('Pending', 'Pending'),
+        ('Complete', 'Complete'),
+    )
+    menu = models.CharField(max_length=16)
+    size = models.CharField(max_length=16)
+    style = models.CharField(max_length=64)
+    additional = models.CharField(max_length=255)
+    is_special = models.BooleanField(default=False)
+    price = models.DecimalField(max_digits=5, default=0.00, decimal_places=2)
+    user_id = models.IntegerField()
+    created_at = models.DateTimeField(default=datetime.now, blank=True)
+    is_complete = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['created_at']
