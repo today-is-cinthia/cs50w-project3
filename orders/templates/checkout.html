@@ -1,0 +1,71 @@
+{% extends "orders/layout.html" %}
+
+{% block content %}
+<h1 class="text-center">Orders</h1>
+<br>
+
+{% if user.is_staff %}
+<table class="table table-sm">
+    <thead>
+    <tr>
+        <th scope="col">Status</th>
+        <th scope="col">Mark</th>
+        <th scope="col">Order Time</th>
+        <th scope="col">Menu</th>
+        <th scope="col">Size</th>
+        <th scope="col">Style</th>
+        <th scope="col">Additional</th>
+        <th scope="col">Special?</th>
+        <th scope="col">Price</th>
+    </tr>
+    </thead>
+    <tbody>
+        {% for item in all_order_items %}
+        <tr>
+            <th scope="row">{% if item.is_complete %}Compleye!{% else %}Pending{% endif %}</th>
+            <td>{% if item.is_complete %}{% else %}  <a href="{% url 'mark_complete'  order_item_id=item.id%}">Complete</a>{% endif %} </td>
+            <td>{{item.created_at}}</td>
+            <td>{{item.menu}}</td>
+            <td>{{item.size}}</td>
+            <td>{{item.style}}</td>
+            <td>{{item.additional}}</td>
+            <td>{% if item.is_special is True %}Yes{% else %}No{% endif %}</td>
+            <td>{{item.price}}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th scope="col">Status</th>
+            <th scope="col">Order Time</th>
+            <th scope="col">Menu</th>
+            <th scope="col">Size</th>
+            <th scope="col">Style</th>
+            <th scope="col">Additional</th>
+            <th scope="col">Special?</th>
+            <th scope="col">Price</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in user_order_items %}
+        <tr>
+            <th scope="row">{% if item.is_complete %}Complete!{% else %}Pending{% endif %}</th>
+            <td>{{ item.created_at }}</td>
+            <td>{{ item.menu }}</td>
+            <td>{{ item.size }}</td>
+            <td>{{ item.style }}</td>
+            <td>{{ item.additional }}</td>
+            <td>{% if item.is_special is True %}Yes{% else %}No{% endif %}</td>
+            <td>${{ item.price }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+
+{% endblock %}

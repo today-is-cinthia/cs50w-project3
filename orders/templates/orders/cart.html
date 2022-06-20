@@ -33,7 +33,7 @@
             <td>{{item.additional}}</td>
             <td>{% if item.is_special is True %}Yes {% else %}No {% endif %}</td>
             <td>${{item.price}}</td>
-            <td>Remove</td>
+            <td><a href="{% url 'remove' cart_item_id=item.id%}">Remove</a></td>
         </tr>
         {% endfor %}
     </tbody>
