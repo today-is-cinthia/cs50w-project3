@@ -5,12 +5,7 @@
 
 {% for title, form in data.items %}
 
-<!-- This example requires Tailwind CSS v2.0+ -->
-<div class="bg-white shadow overflow-hidden sm:rounded-lg">
-    <div class="px-4 py-5 sm:px-6">
-      <h3 class="text-lg leading-6 font-medium text-gray-900">{{title}}</h3>
-    </div>
-    <div class="border-t border-gray-200">
+<h1>{{title}}</h1>
         <form action="/cart" method="post" id="{{title}}">
             {% csrf_token %}
             <input type="hidden" value="{{title}}" name="menu_item" id="menu_item">
@@ -19,7 +14,6 @@
             <h5 id="price_indicator">Price: $--.--</h5>
             <input type="submit" value="Add {{title}} to Cart">
         </form><br><br><br> 
-  </div>
   
 
 {% endfor %}
@@ -31,9 +25,9 @@
         $('#Pizza').change(function(){
             var menu_item = $('#Pizza #menu_item').val();
             var style = $('#Pizza #id_style option:selected').val();
-            var size = $('#Pizza #id_style option:selected').val();
+            var size = $('#Pizza #id_size option:selected').val();
             var is_special = $('#Pizza #id_is_special').is(':checked');
-            var last_checked = $("Pizza #id_toppings input[name='toppings']:checked").val();
+            var last_checked = $("#Pizza #id_toppings input[name='toppings']:checked").val();
             var num_checked = $("input[name='toppings']:checked").length;
             var limit = 3;
 
@@ -97,7 +91,7 @@
 
             $.ajax({
                 type: "GET",
-                url: '{% url "get_price" %}',
+                url: '{% url "obtener_precio" %}',
                 data: {
                     'menu_item': menu_item,
                     'style': style,
@@ -117,7 +111,7 @@
 
             $.ajax({
                 type: "GET",
-                url: '{% url "get_price" %}',
+                url: '{% url "obtener_precio" %}',
                 data: {
                     'menu_item': menu_item,
                     'style': style,
@@ -137,7 +131,7 @@
 
             $.ajax({
                 type: "GET",
-                url: '{% url "get_price" %}',
+                url: '{% url "obtener_precio" %}',
                 data: {
                     'menu_item': menu_item,
                     'style': style,

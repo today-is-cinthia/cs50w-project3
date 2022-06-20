@@ -1,5 +1,4 @@
 from ast import Pass
-from click import style
 from django.http import HttpResponse
 from django.shortcuts import redirect, render
 from django.contrib.auth import authenticate, login, logout
@@ -8,6 +7,8 @@ from django.contrib.auth.models import User
 from django.http import JsonResponse
 from decimal import Decimal
 from .models import Pizza, Sub, Pasta, Salad, DinnerPlatter
+from django.db.models import Sum
+from django.shortcuts import get_object_or_404
 
 from orders.models import CartItem
 from .forms import PizzaForm, SubForm, PastaForm, SaladForm, DinnerPlatterForm
@@ -103,32 +104,32 @@ def obtener_precio(request):
                 menu_pizza = Pizza.objects.get(style=style, size=size, num_toppings=num_toppings, is_special=is_special)
             price = menu_pizza.price
 
-        elif menu_item == 'Sub':
+    elif menu_item == 'Sub':
             ingredients = request.GET.get('ingredients')
             size = request.GET.get('size')
             extras = request.GET.get('extras')
             menu_sub = Sub.objects.get(ingredients=ingredients, size=size)
             price = menu_sub.price + Decimal(0.50)*int(extras)
-        elif menu_item == 'Pasta':
+    elif menu_item == 'Pasta':
             style = request.GET.get('style')
             menu_pasta = Pasta.objects.get(style=style)
             price = menu_pasta.price
-        elif menu_item == 'Salad':
+    elif menu_item == 'Salad':
             style = request.GET.get('style')
             menu_salad = Salad.objects.get(style=style)
             price = menu_salad.price
-        elif menu_item == 'DinnerPlatter':
+    elif menu_item == 'DinnerPlatter':
             style = request.GET.get('style')
             size = request.GET.get('size')
             if style != "" and size != "":
                 menu_dinner_platter = DinnerPlatter.objects.get(style=style, size=size)
                 price = menu_dinner_platter.price
-        else:
+    else:
             price ="--.--"
-        data = {
+    data = {
             'price': price
         }
-        return JsonResponse(data)
+    return JsonResponse(data)
 
 def cart(request):
     if request.method == "POST":
@@ -149,4 +150,103 @@ def cart(request):
                 for topping in form['toppings']:
                     toppings_list.append(str(topping))
                 toppings = ", ".join(toppings_list)
-                
+
+                if is_special:
+                    menu_pizza = Pizza.objects.get(style=style, size=size,is_special=is_special)
+                else:
+                   menu_pizza = Pizza.objects.get(style=style, size=size, num_toppings=num_toppings, is_special=is_special)
+
+                price = menu_pizza.price
+                print(price)
+
+                order = CartItem(menu=menu, size=size, style=style, additional=toppings, is_special=is_special, user_id=request.user.id, price=price)
+                order.save()
+
+        elif request.POST['menu_item'] == 'Sub':
+            form = SubForm(request.POST)
+            if form.is_valid():
+                form = form.cleaned_data  
+                menu = 'Sub'
+                ingredients = form['ingredients']
+                size = form['size']
+                extras_list = []
+                added_cost = Decimal(0.00)
+                for extra in form['extras']:
+                    extras_list.append(str(extra))
+                    added_cost += extra.added_cost
+
+                extras = ", ".join(extras_list)
+
+                menu_sub = Sub.objects.get(ingredients=ingredients, size=size)
+                price = menu_sub.price + Decimal(added_cost)
+
+                order = CartItem(menu=menu, size=size, style=ingredients, additional=extras, is_special=False, user_id=request.user.id, price=price)
+                order.save()
+            redirect('menu')
+        elif request.POST['menu_item'] == 'Pasta':
+            form = PastaForm(request.POST)
+            if form.is_valid():
+                form = form.cleaned_data
+                menu = 'Pasta'
+                style = form['style']
+            
+            menu_pasta = Pasta.objects.get(style=style)
+            price = menu_pasta.price
+
+            order = CartItem(menu=menu, style=style, user_id=request.user.id, price=price)
+            order.save()
+        elif request.POST['menu_item'] == 'Salad':
+            form = SaladForm(request.POST)
+            if form.is_valid():
+                form = form.cleaned_data
+                menu = 'Salad'
+                style = form['style']
+
+                menu_salad = Salad.objects.get(style=style)
+                price = menu_salad.price
+
+                order = CartItem(menu=menu, style=style, user_id=request.user.id, price=price)
+                order.save()
+        elif request.POST['menu_item'] == DinnerPlatter:
+            form = DinnerPlatterForm(request.POST)
+            if form.is_valid():
+                form = form.cleaned_data
+                menu = 'DinnerPlatter'
+                style = form['style']
+                size = form['size']
+
+                menu_dinner_platter = DinnerPlatter.objects.get(style=style, size=size)
+                price = menu_dinner_platter.price
+
+                order = CartItem(menu=menu, style=style, size=size, user_id=request.user.id, price=price)
+                order.save()
+        else:
+            print("Post error")
+            redirect('menu')
+
+        cart_items = CartItem.objects.filter(user_id= request.user.id)
+        if cart_items:
+            total_cost = Decimal(cart_items.aggregate(Sum('price'))['price__sum'])
+        else:
+            total_cost = 0
+        
+        context = {
+            'car_items' : cart_items,
+            'num_cart_items': cart_items.count(),
+            'total_cost': total_cost
+        }
+        return render(request, 'orders/cart.html', context)
+    else:
+
+        cart_items = CartItem.objects.filter(user_id= request.user.id)
+        if cart_items:
+            total_cost = Decimal(cart_items.aggregate(Sum('price'))['price__sum'])
+        else:
+            total_cost = 0
+
+        context = {
+            'cart_items': cart_items,
+            'num_cart_items': cart_items.count(),
+            'total_cost': total_cost
+        }
+        return render(request, 'orders/cart.html', context)

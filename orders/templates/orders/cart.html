@@ -1,0 +1,51 @@
+{% extends "orders/layout.html" %}
+
+{% block content %}
+
+<h1 class="text-center">Shopping Cart</h1>
+<br>
+
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th scope="col">Menu</th>
+            <th scope="col">Size</th>
+            <th scope="col">Style</th>
+            <th scope="col">Additional</th>
+            <th scope="col">Special?</th>
+            <th scope="col">Price</th>
+            <th scope="col"></th>
+        </tr>
+    </thead>
+    <tfoot>
+        <tr>
+            <td colspan="4"></td>
+            <td><strong>TOTAL:</strong></td>
+            <td>${{ total_cost | floatformat:2}}</td>
+        </tr>
+    </tfoot>
+    <tbody>
+        {% for item in cart_items %}
+        <tr>
+            <th scope="row">{{item.menu}}</th>
+            <td>{{item.size}}</td>
+            <td>{{item.style}}</td>
+            <td>{{item.additional}}</td>
+            <td>{% if item.is_special is True %}Yes {% else %}No {% endif %}</td>
+            <td>${{item.price}}</td>
+            <td>Remove</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% if cart_items %}
+<form action="/checkout" method="post">
+    {% csrf_token %}
+
+    <input type="submit" value="Checkout: ${{ total_cost | floatformat:2}}" class="btn btn-success btn-block">
+</form>
+{% else %}
+<a class="btn btn-success btn-block" href="/menu">Continue Shopping</a>
+{% endif %} <br><br>
+{% endblock %}
