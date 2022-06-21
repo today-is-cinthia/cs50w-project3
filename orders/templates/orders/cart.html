@@ -43,9 +43,9 @@
 <form action="/checkout" method="post">
     {% csrf_token %}
 
-    <input type="submit" value="Checkout: ${{ total_cost | floatformat:2}}" class="btn btn-success btn-block">
+    <center><input style="width:20% ;" type="submit" value="Checkout: ${{ total_cost | floatformat:2}}" class="btn btn-success btn-block"></center>
 </form>
 {% else %}
-<a class="btn btn-success btn-block" href="/menu">Continue Shopping</a>
+<center><a style="width:20% ;" class="btn btn-success btn-block" href="/menu">Continue Shopping</a></center>
 {% endif %} <br><br>
 {% endblock %}

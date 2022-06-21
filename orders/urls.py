@@ -12,6 +12,6 @@ urlpatterns = [
     path("obtener_precio", views.obtener_precio, name="obtener_precio"),
     path("cart", views.cart, name="cart"),
     path("checkout", views.checkout, name="checkout"),
-    path("mark_complete", views.mark_complete, name="mark_complete"),
-    path("remove", views.remove, name='remove'),
+    path("mark_complete/<int:order_item_id>", views.mark_complete, name="mark_complete"),
+    path("remove/<int:cart_item_id>/", views.remove, name='remove'),
 ]

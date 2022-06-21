@@ -22,7 +22,7 @@
     <tbody>
         {% for item in all_order_items %}
         <tr>
-            <th scope="row">{% if item.is_complete %}Compleye!{% else %}Pending{% endif %}</th>
+            <th scope="row">{% if item.is_complete %}Complete{% else %}Pending!{% endif %}</th>
             <td>{% if item.is_complete %}{% else %}  <a href="{% url 'mark_complete'  order_item_id=item.id%}">Complete</a>{% endif %} </td>
             <td>{{item.created_at}}</td>
             <td>{{item.menu}}</td>

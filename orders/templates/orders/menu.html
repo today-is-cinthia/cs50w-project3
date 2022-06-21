@@ -4,16 +4,23 @@
 {% block content %}
 
 {% for title, form in data.items %}
+<center>
+<div class="card" style="width:400px">
+    <div class="card-body">
+      <h4 class="card-title">{{title}}</h4>
+      <form action="/cart" method="post" id="{{title}}">
+        {% csrf_token %}
+        <input type="hidden" value="{{title}}" name="menu_item" id="menu_item">
+        {{ form | crispy }}
+    
+        <h5 id="price_indicator">Price: $--.--</h5>
+        <input class="btn btn-primary" type="submit" value="Add {{title}} to Cart">
+    </form>
 
-<h1>{{title}}</h1>
-        <form action="/cart" method="post" id="{{title}}">
-            {% csrf_token %}
-            <input type="hidden" value="{{title}}" name="menu_item" id="menu_item">
-            {{ form | crispy }}
-        
-            <h5 id="price_indicator">Price: $--.--</h5>
-            <input type="submit" value="Add {{title}} to Cart">
-        </form><br><br><br> 
+    </div>
+  </div>
+</div></center><br><br>
+
   
 
 {% endfor %}

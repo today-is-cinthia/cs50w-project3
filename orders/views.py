@@ -267,31 +267,31 @@ def checkout(request):
             order.save()
             item.delete()
 
-            all_order_items = OrderItem.objects.order_by('is_complete', 'created at')
+        all_order_items = OrderItem.objects.order_by('is_complete')
 
-            user_order_items = all_order_items.filter(user_id=request.user.id)
-            cart_items = CartItem.objects.filter(user_id= request.user.id)
+        user_order_items = all_order_items.filter(user_id=request.user.id)
+        cart_items = CartItem.objects.filter(user_id= request.user.id)
 
-            context = {
-                'cart_items': cart_items,
-                'all_order_items': all_order_items,
-                'user_order_items': user_order_items,
-                'num_cart_items': cart_items.count(),
-            }
-            return render(request, 'orders/checkout.html', context)
-        else:
-            all_order_items = OrderItem.objects.order_by('is_complete', 'created at')
+        context = {
+            'cart_items': cart_items,
+            'all_order_items': all_order_items,
+            'user_order_items': user_order_items,
+            'num_cart_items': cart_items.count(),
+        }
+        return render(request, 'orders/checkout.html', context)
+    else:
+        all_order_items = OrderItem.objects.order_by('is_complete')
 
-            user_order_items = all_order_items.filter(user_id=request.user.id)
-            cart_items = CartItem.objects.filter(user_id= request.user.id)
+        user_order_items = all_order_items.filter(user_id=request.user.id)
+        cart_items = CartItem.objects.filter(user_id= request.user.id)
 
-            context = {
+        context = {
             'cart_items': cart_items,
             'all_order_items': all_order_items,
             'user_order_items': user_order_items,
             'num_cart_items': cart_items.count(),  
-            }
-            return render(request, 'orders/checkout.html', context)
+        }
+        return render(request, 'orders/checkout.html', context)
 
 def remove(request, cart_item_id):
     cart_item = CartItem.objects.filter(id=cart_item_id)
