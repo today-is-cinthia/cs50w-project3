@@ -10,7 +10,7 @@ class PizzaForm(ModelForm):
         }
         labels = {
             'num_toppings': 'Number of toppings',
-            'is_special': 'Special Pizza' 
+            'is_special': 'Pesto Sauce' 
         }
 
 class SubForm(ModelForm):
