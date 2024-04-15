@@ -1,6 +1,6 @@
 # Project 3
 
-Web Programming with Python and JavaScript
+## Web Programming with Python and JavaScript
 
 PINOCCIO'S PIZZA AND SUBS
 
